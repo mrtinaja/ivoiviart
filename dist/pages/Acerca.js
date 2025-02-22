@@ -1,0 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const jsx_runtime_1 = require("react/jsx-runtime");
+const Acerca = () => {
+    return ((0, jsx_runtime_1.jsx)("div", { className: "p-8 bg-[#005e63] min-h-screen text-white flex flex-col items-center", children: (0, jsx_runtime_1.jsxs)("div", { className: "max-w-2xl text-center", children: [(0, jsx_runtime_1.jsx)("h1", { className: "text-4xl font-extrabold text-[#f0eceb] mb-4 border-b-4 border-[#f0eceb] pb-2", children: "Acerca de IvoIvi Art" }), (0, jsx_runtime_1.jsxs)("p", { className: "text-xl  text-[#f0eceb] mt-10", children: ["\u00A1Hola! Bienvenido a", " ", (0, jsx_runtime_1.jsx)("span", { className: "font-semibold text-yellow-300", children: "IvoIvi Art" }), ". Ac\u00E1 vas a encontrar mis obras en", " ", (0, jsx_runtime_1.jsx)("span", { className: "italic text-yellow-300", children: "cer\u00E1mica, pintura y artesan\u00EDas" }), ", todo \u00FAnico y hecho a mano."] }), (0, jsx_runtime_1.jsxs)("p", { className: "text-xl leading-relaxed text-[#f0eceb] mt-10", children: ["Ten\u00E9 en cuenta que la realizaci\u00F3n del producto puede tardar aproximadamente", " ", (0, jsx_runtime_1.jsx)("span", { className: "font-bold text-yellow-400", children: "15 d\u00EDas" }), " siempre y cuando no esten realizados. . Ojal\u00E1 disfrutes la visita."] }), (0, jsx_runtime_1.jsx)("p", { className: "text-4xl font-semibold text-yellow-400 mt-10", children: "\u00A1Muchas gracias! \uD83C\uDFA8\u2728" })] }) }));
+};
+exports.default = Acerca;
