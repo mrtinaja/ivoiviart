@@ -4,6 +4,7 @@
     "module": "CommonJS",
     "jsx": "react-jsx", // Necesario para React 17+ y TypeScript
     "strict": true,
+    "resolveJsonModule": true,
 
     "skipLibCheck": true,
     "moduleResolution": "node",

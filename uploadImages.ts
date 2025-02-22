@@ -1,61 +1,60 @@
 import * as admin from "firebase-admin";
-import * as fs from "fs";
-import * as path from "path";
+import serviceAccount from "./firebase-key.json"; // ✅ Asegurate de que este archivo existe
+
 import { Storage } from "@google-cloud/storage";
+import * as path from "path";
+import * as fs from "fs";
 
-// Inicializar Firebase Admin
-const serviceAccountPath = path.resolve(__dirname, "firebase-key.json");
-
-if (!fs.existsSync(serviceAccountPath)) {
-  throw new Error(
-    `❌ Archivo firebase-key.json no encontrado en: ${serviceAccountPath}`
-  );
+// 🔥 Inicializar Firebase Admin SDK
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+    storageBucket: "ivoiviart-bucket.appspot.com",
+  });
 }
 
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"));
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-  storageBucket: "ivoiviart.appspot.com", // Reemplazar con tu Storage Bucket
+const storage = new Storage({
+  keyFilename: path.join(__dirname, "firebase-key.json"),
 });
 
-const storage = new Storage();
-const bucket = storage.bucket("ivoiviart.appspot.com"); // Reemplazar con tu Storage Bucket
+const bucket = storage.bucket("ivoiviart-bucket.appspot.com"); // Verificá que el nombre sea correcto
 
-// 🔥 DEFINIR localFolder (ruta de las imágenes en tu PC)
+// 📤 Función para subir archivos
+async function uploadFile(filePath: string) {
+  try {
+    const destination = `images/${path.basename(filePath)}`;
+
+    await bucket.upload(filePath, {
+      destination,
+      public: true,
+      metadata: {
+        cacheControl: "public, max-age=31536000",
+      },
+    });
+
+    console.log(`✅ ${filePath} subido correctamente a ${destination}`);
+  } catch (error) {
+    console.error(`❌ Error al subir ${filePath}:`, error);
+  }
+}
+
+// 📂 Subir todas las imágenes de la carpeta /public/img
 const localFolder = path.join(__dirname, "public/img");
+fs.readdir(localFolder, async (err, files) => {
+  if (err) {
+    console.error("❌ Error al leer la carpeta:", err);
+    return;
+  }
 
-// 🔥 DEFINIR uploadFile (función para subir cada imagen a Firebase)
-const uploadFile = async (filePath: string) => {
-  const fileName = path.basename(filePath);
-  const destination = `imagenes/${fileName}`;
+  if (files.length === 0) {
+    console.log("⚠️ No hay imágenes para subir.");
+    return;
+  }
 
-  await bucket.upload(filePath, {
-    destination,
-    metadata: {
-      contentType: "image/jpeg", // Cambiar según el tipo de imagen
-    },
-  });
+  console.log(`📂 Imágenes detectadas:`, files);
+  for (const file of files) {
+    await uploadFile(path.join(localFolder, file));
+  }
 
-  console.log(`✅ Imagen subida: ${fileName}`);
-};
-
-// 🔥 Función para leer todas las imágenes y subirlas
-const uploadImages = async () => {
-  fs.readdir(localFolder, async (err, files) => {
-    if (err) {
-      console.error("❌ Error al leer la carpeta:", err);
-      return;
-    }
-
-    for (const file of files) {
-      const filePath = path.join(localFolder, file);
-      await uploadFile(filePath);
-    }
-
-    console.log("🚀 Todas las imágenes fueron subidas a Firebase Storage.");
-  });
-};
-
-// Ejecutar la función
-uploadImages();
+  console.log("🚀 Proceso de subida completado.");
+});
