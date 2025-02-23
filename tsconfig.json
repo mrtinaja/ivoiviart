@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "es6",
     "module": "CommonJS",
     "jsx": "react-jsx", // Necesario para React 17+ y TypeScript
     "strict": true,
     "resolveJsonModule": true,
-
+    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
     "rootDir": "./src",

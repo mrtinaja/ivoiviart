@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useMedia } from "../context/MediaContext";
+
 import { useCart } from "../context/CartContext";
 import ArtisticButton from "../components/ArtisticButton";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
+import { useMedia } from "../context/MediaContext";
+
+// Función para generar la URL pública en Google Cloud Storage (debe estar definida en algún lugar compartido)
+const getStorageUrl = (fileName: string): string =>
+  `https://storage.googleapis.com/ivoiviart/img/${encodeURIComponent(
+    fileName
+  )}`;
+
+// URL fallback (asegúrate de que este archivo exista en el bucket)
+const fallbackUrl = getStorageUrl("default.jpg");
 
 declare global {
   interface Window {
@@ -18,14 +28,12 @@ const ProductDetails: React.FC = () => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
-  // Convertir id a número para buscar el producto
   const product = media.find((item) => item.id === Number(id));
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  // Al montar el componente, recuperar el índice guardado para este producto
   useEffect(() => {
     if (product) {
       const savedIndex = localStorage.getItem(
@@ -39,7 +47,6 @@ const ProductDetails: React.FC = () => {
     }
   }, [product]);
 
-  // Cada vez que currentIndex cambie, se guarda en localStorage
   useEffect(() => {
     if (product) {
       localStorage.setItem(
@@ -49,7 +56,6 @@ const ProductDetails: React.FC = () => {
     }
   }, [currentIndex, product]);
 
-  // Reiniciar flag de error cuando cambia la imagen o el producto
   useEffect(() => {
     setImageError(false);
   }, [currentIndex, product?.id]);
@@ -65,10 +71,10 @@ const ProductDetails: React.FC = () => {
   ) => {
     if (!imageError) {
       console.warn(
-        "Imagen no encontrada, reemplazando con default:",
+        "Imagen no encontrada, usando fallback:",
         e.currentTarget.src
       );
-      e.currentTarget.src = "/img/default.jpg";
+      e.currentTarget.src = fallbackUrl;
       setImageError(true);
     }
   };
@@ -92,25 +98,21 @@ const ProductDetails: React.FC = () => {
       price: product.price ?? 0,
     });
     setShowModal(true);
-    if (window.modalTimeout) {
-      clearTimeout(window.modalTimeout);
-    }
-    window.modalTimeout = window.setTimeout(() => {
-      setShowModal(false);
-    }, 2000);
+    if (window.modalTimeout) clearTimeout(window.modalTimeout);
+    window.modalTimeout = window.setTimeout(() => setShowModal(false), 2000);
   };
 
   const handleGoToCart = () => {
     navigate("/carrito");
   };
 
-  // Verificación de imagen segura
+  // Aquí product.images ya contiene URLs completas (desde GCS)
   const imageSrc =
     product.images && product.images.length > 0 && !imageError
-      ? `/${product.images[currentIndex]}`
-      : "/img/default.jpg";
+      ? product.images[currentIndex]
+      : fallbackUrl;
 
-  console.log("Mostrando imagen:", imageSrc); // Para depuración
+  console.log("Mostrando imagen:", imageSrc);
 
   return (
     <div className="bg-[#005e63] min-h-screen flex flex-col items-center justify-center p-6">
@@ -205,7 +207,6 @@ const ProductDetails: React.FC = () => {
           >
             Añadir al carrito
           </ArtisticButton>
-
           <ArtisticButton onClick={handleGoToCart} className="w-64 text-center">
             🛒 Ir al carrito
           </ArtisticButton>

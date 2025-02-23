@@ -4,6 +4,10 @@ import { useCart } from "../context/CartContext";
 import axios from "axios";
 import TrashButton from "../components/TrashButton";
 
+// URL de fallback en caso de error (asegúrate de que exista en tu bucket o donde quieras alojarlo)
+const fallbackUrl =
+  "https://storage.googleapis.com/ivoiviart-bucket/img/default.jpg";
+
 const CartPage: React.FC = () => {
   const { cart, removeFromCart, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
@@ -13,7 +17,10 @@ const CartPage: React.FC = () => {
 
   // Función para procesar el pago
   const handlePay = async () => {
-    if (cart.length === 0) return alert("El carrito está vacío.");
+    if (cart.length === 0) {
+      alert("El carrito está vacío.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -43,7 +50,7 @@ const CartPage: React.FC = () => {
         <div className="w-full max-w-4xl">
           <Link
             to="/"
-            className=" text-gray-800 hover:underline text-lg font-semibold"
+            className="text-gray-800 hover:underline text-lg font-semibold"
           >
             ← Volver a la Galería
           </Link>
@@ -73,13 +80,13 @@ const CartPage: React.FC = () => {
                   key={product.id}
                   className="flex items-center justify-between border-b py-6"
                 >
-                  {/* Imagen miniatura */}
+                  {/* Imagen miniatura: ya no anteponemos '/', pues product.images[0] es URL completa */}
                   <img
-                    src={`/${product.images[0]}`}
+                    src={product.images[0]}
                     alt={product.description}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/img/default.jpg";
+                      e.currentTarget.src = fallbackUrl;
                     }}
                     className="w-20 h-20 object-cover rounded-md shadow-sm"
                   />

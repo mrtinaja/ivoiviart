@@ -4,13 +4,14 @@ import Home from "./pages/Home";
 import Acerca from "./pages/Acerca";
 import Contacto from "./pages/Contacto";
 import Header from "./components/Header";
-import { MediaProvider } from "./context/MediaContext";
+
 import { CartProvider } from "./context/CartContext";
 import ProductDetails from "./pages/ProductDetails";
 import CartPage from "./pages/CartPage"; // Importar la nueva pantalla
 import ThankYouPage from "./pages/ThankYouPage";
 import "@fontsource/open-sans/800.css";
 import "@fontsource/open-sans/300.css";
+import { MediaProvider } from "./context/MediaContext";
 
 const App: React.FC = () => {
   return (
