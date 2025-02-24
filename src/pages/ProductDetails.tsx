@@ -47,6 +47,10 @@ const ProductDetails: React.FC = () => {
     );
   };
 
+  const handleThumbnailClick = (index: number) => {
+    setCurrentIndex(index);
+  };
+
   const handleAddToCart = () => {
     addToCart({
       ...product,
@@ -79,72 +83,32 @@ const ProductDetails: React.FC = () => {
 
       <div className="bg-[#2f777b] shadow-md rounded-md p-6 w-full max-w-4xl mt-12 flex flex-col items-center overflow-hidden">
         <div className="relative w-full flex justify-center items-center">
-          {product.images.length > 1 && (
-            <button
-              onClick={handlePrevImage}
-              className="absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 
-                         w-12 h-12 bg-[#90442a] text-white rounded-full flex items-center 
-                         justify-center shadow-lg hover:scale-110 transition"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          )}
-
           <LazyLoadImage
             src={imageSrc}
             alt={product.description || "Imagen no disponible"}
             effect="blur"
             onError={(e) => {
-              console.error(
-                "⚠️ Error al cargar imagen, reintentando:",
-                e.currentTarget.src
-              );
-
-              // Forzar la recarga de la imagen después de un pequeño delay
-              setTimeout(() => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = imageSrc; // Reintenta con la misma imagen
-              }, 1000); // Reintento tras 1 segundo
+              console.error("⚠️ Error al cargar imagen:", e.currentTarget.src);
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = fallbackUrl;
             }}
             className="w-auto max-w-[600px] h-auto max-h-[80vh] object-contain rounded-lg shadow-lg transition-opacity duration-500"
           />
+        </div>
 
-          {product.images.length > 1 && (
-            <button
-              onClick={handleNextImage}
-              className="absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 
-                         w-12 h-12 bg-[#90442a] text-white rounded-full flex items-center 
-                         justify-center shadow-lg hover:scale-110 transition"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          )}
+        {/* Miniaturas debajo de la imagen */}
+        <div className="flex gap-2 mt-4">
+          {product.images.map((img, index) => (
+            <img
+              key={index}
+              src={img}
+              alt="Miniatura"
+              onClick={() => handleThumbnailClick(index)}
+              className={`w-16 h-16 object-cover rounded-md shadow-md cursor-pointer border-2 ${
+                currentIndex === index ? "border-white" : "border-transparent"
+              }`}
+            />
+          ))}
         </div>
 
         <h1
@@ -156,7 +120,7 @@ const ProductDetails: React.FC = () => {
 
         {product.price !== undefined && (
           <p
-            className="text-4xl  font-bold mt-4 tracking-wide bg-gradient-to-r from-[#90442a] via-[#005e63] to-[#90442a] bg-clip-text text-transparent drop-shadow-xl"
+            className="text-4xl font-bold mt-4 tracking-wide bg-gradient-to-r from-[#90442a] via-[#005e63] to-[#90442a] bg-clip-text text-transparent drop-shadow-xl"
             style={{ WebkitTextStroke: "2px white" }}
           >
             ${product.price.toLocaleString()}
@@ -184,22 +148,6 @@ const ProductDetails: React.FC = () => {
           </ArtisticButton>
         </div>
       </div>
-
-      {showModal && (
-        <div
-          className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="bg-white p-6 rounded-lg shadow-lg text-center transform scale-105 transition-all"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-lg font-semibold text-green-700">
-              {product.description} se ha agregado al carrito 🛒
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
