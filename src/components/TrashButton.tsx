@@ -2,9 +2,10 @@ import React from "react";
 
 type TrashButtonProps = {
   onClick: () => void;
+  disabled?: boolean;
 };
 
-const TrashButton: React.FC<TrashButtonProps> = ({ onClick }) => {
+const TrashButton: React.FC<TrashButtonProps> = ({ onClick, disabled }) => {
   return (
     <button
       onClick={onClick}

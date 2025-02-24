@@ -1,26 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-
 import { useCart } from "../context/CartContext";
 import ArtisticButton from "../components/ArtisticButton";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
 import { useMedia } from "../context/MediaContext";
 
-// Función para generar la URL pública en Google Cloud Storage (debe estar definida en algún lugar compartido)
 const getStorageUrl = (fileName: string): string =>
   `https://storage.googleapis.com/ivoiviart/img/${encodeURIComponent(
     fileName
   )}`;
 
-// URL fallback (asegúrate de que este archivo exista en el bucket)
 const fallbackUrl = getStorageUrl("default.jpg");
-
-declare global {
-  interface Window {
-    modalTimeout?: number;
-  }
-}
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,30 +26,8 @@ const ProductDetails: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    if (product) {
-      const savedIndex = localStorage.getItem(
-        `product-${product.id}-currentIndex`
-      );
-      if (savedIndex !== null) {
-        setCurrentIndex(
-          Math.max(0, Math.min(Number(savedIndex), product.images.length - 1))
-        );
-      }
-    }
-  }, [product]);
-
-  useEffect(() => {
-    if (product) {
-      localStorage.setItem(
-        `product-${product.id}-currentIndex`,
-        currentIndex.toString()
-      );
-    }
-  }, [currentIndex, product]);
-
-  useEffect(() => {
     setImageError(false);
-  }, [currentIndex, product?.id]);
+  }, [product?.id]);
 
   if (!product) {
     return (
@@ -66,26 +35,13 @@ const ProductDetails: React.FC = () => {
     );
   }
 
-  const handleImageError = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>
-  ) => {
-    if (!imageError) {
-      console.warn(
-        "Imagen no encontrada, usando fallback:",
-        e.currentTarget.src
-      );
-      e.currentTarget.src = fallbackUrl;
-      setImageError(true);
-    }
-  };
-
   const handleNextImage = () => {
-    if (!product.images || product.images.length === 0) return;
+    if (product.images.length === 0) return;
     setCurrentIndex((prevIndex) => (prevIndex + 1) % product.images.length);
   };
 
   const handlePrevImage = () => {
-    if (!product.images || product.images.length === 0) return;
+    if (product.images.length === 0) return;
     setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? product.images.length - 1 : prevIndex - 1
     );
@@ -98,21 +54,17 @@ const ProductDetails: React.FC = () => {
       price: product.price ?? 0,
     });
     setShowModal(true);
-    if (window.modalTimeout) clearTimeout(window.modalTimeout);
-    window.modalTimeout = window.setTimeout(() => setShowModal(false), 2000);
+    setTimeout(() => setShowModal(false), 2000);
   };
 
   const handleGoToCart = () => {
     navigate("/carrito");
   };
 
-  // Aquí product.images ya contiene URLs completas (desde GCS)
   const imageSrc =
-    product.images && product.images.length > 0 && !imageError
+    product.images.length > 0 && !imageError
       ? product.images[currentIndex]
       : fallbackUrl;
-
-  console.log("Mostrando imagen:", imageSrc);
 
   return (
     <div className="bg-[#005e63] min-h-screen flex flex-col items-center justify-center p-6">
@@ -125,12 +77,14 @@ const ProductDetails: React.FC = () => {
         </Link>
       </div>
 
-      <div className="bg-orange-200 shadow-md rounded-md p-6 w-full max-w-4xl mt-4 flex flex-col items-center">
+      <div className="bg-[#2f777b] shadow-md rounded-md p-6 w-full max-w-4xl mt-12 flex flex-col items-center overflow-hidden">
         <div className="relative w-full flex justify-center items-center">
           {product.images.length > 1 && (
             <button
               onClick={handlePrevImage}
-              className="absolute left-2 md:left-4 w-14 h-14 bg-[#90442a] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition"
+              className="absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 
+                         w-12 h-12 bg-[#90442a] text-white rounded-full flex items-center 
+                         justify-center shadow-lg hover:scale-110 transition"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -138,7 +92,7 @@ const ProductDetails: React.FC = () => {
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
-                className="w-8 h-8"
+                className="w-6 h-6"
               >
                 <path
                   strokeLinecap="round"
@@ -153,14 +107,27 @@ const ProductDetails: React.FC = () => {
             src={imageSrc}
             alt={product.description || "Imagen no disponible"}
             effect="blur"
-            onError={handleImageError}
-            className="w-full max-w-2xl object-contain rounded-lg shadow-lg"
+            onError={(e) => {
+              console.error(
+                "⚠️ Error al cargar imagen, reintentando:",
+                e.currentTarget.src
+              );
+
+              // Forzar la recarga de la imagen después de un pequeño delay
+              setTimeout(() => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = imageSrc; // Reintenta con la misma imagen
+              }, 1000); // Reintento tras 1 segundo
+            }}
+            className="w-auto max-w-[600px] h-auto max-h-[80vh] object-contain rounded-lg shadow-lg transition-opacity duration-500"
           />
 
           {product.images.length > 1 && (
             <button
               onClick={handleNextImage}
-              className="absolute right-2 md:right-4 w-14 h-14 bg-[#90442a] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition"
+              className="absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 
+                         w-12 h-12 bg-[#90442a] text-white rounded-full flex items-center 
+                         justify-center shadow-lg hover:scale-110 transition"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -168,7 +135,7 @@ const ProductDetails: React.FC = () => {
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
-                className="w-8 h-6"
+                className="w-6 h-6"
               >
                 <path
                   strokeLinecap="round"
@@ -181,33 +148,38 @@ const ProductDetails: React.FC = () => {
         </div>
 
         <h1
-          className="text-3xl font-bold text-gray-800 mt-4"
-          style={{
-            height: "72px",
-            overflow: "hidden",
-            fontFamily: "'Dancing Script', cursive",
-          }}
+          className="text-3xl font-bold text-black mt-4"
+          style={{ fontFamily: "'Dancing Script', cursive" }}
         >
           {product.description}
         </h1>
 
         {product.price !== undefined && (
           <p
-            className="text-5xl font-bold mt-2 tracking-wide bg-gradient-to-r from-[#90442a] via-[#005e63] to-[#90442a] bg-clip-text text-transparent drop-shadow-xl"
-            style={{ WebkitTextStroke: "1px white" }}
+            className="text-4xl  font-bold mt-4 tracking-wide bg-gradient-to-r from-[#90442a] via-[#005e63] to-[#90442a] bg-clip-text text-transparent drop-shadow-xl"
+            style={{ WebkitTextStroke: "2px white" }}
           >
             ${product.price.toLocaleString()}
           </p>
         )}
 
-        <div className="flex gap-4 mt-12 justify-center">
+        <div className="flex flex-col md:flex-row gap-4 mt-12 justify-center w-full">
           <ArtisticButton
             onClick={handleAddToCart}
-            className="w-64 text-center"
+            className="w-full md:w-64 text-center"
           >
             Añadir al carrito
           </ArtisticButton>
-          <ArtisticButton onClick={handleGoToCart} className="w-64 text-center">
+          <Link
+            to="/"
+            className="text-[#070302] hover:underline text-lg font-semibold text-center"
+          >
+            ← Volver a la Galería
+          </Link>
+          <ArtisticButton
+            onClick={handleGoToCart}
+            className="w-full md:w-64 text-center"
+          >
             🛒 Ir al carrito
           </ArtisticButton>
         </div>

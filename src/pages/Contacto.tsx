@@ -32,33 +32,49 @@ const Contacto: React.FC = () => {
 
   return (
     <div className="bg-[#005e63] min-h-screen flex items-center justify-center text-black p-4">
-      <div className="w-full max-w-5xl bg-green-200 p-8 rounded-lg shadow-2xl">
-        <h2 className="text-4xl font-bold mb-6">Contacto</h2>
-        <p className="text-lg mb-6">
+      <div className="w-full max-w-5xl bg-[#7fbec2] p-8 rounded-lg shadow-2xl">
+        <h2
+          className="text-4xl font-bold mb-6"
+          style={{ fontFamily: "'Dancing Script', cursive" }}
+        >
+          Contacto
+        </h2>
+        <p
+          className="text-2xl mb-6"
+          style={{ fontFamily: "'Dancing Script', cursive" }}
+        >
           Déjanos un mensaje o sugerencia. Estamos atentos a tus comentarios.
         </p>
         <form className="space-y-6" onSubmit={handleSubmit}>
           <input
             type="text"
-            className="w-full border border-gray-300 rounded-md p-4 text-black focus:outline-none focus:ring-2 focus:ring-[#c0c231]"
+            className="text-2xl w-full border border-gray-300 rounded-md p-4 text-black focus:outline-none focus:ring-2 focus:ring-[#c0c231]"
             placeholder="Tu nombre"
             value={fromName}
             onChange={(e) => setFromName(e.target.value)}
             required
+            style={{ fontFamily: "'Dancing Script', cursive" }}
           />
           <textarea
-            className="w-full h-40 border border-gray-300 rounded-md p-4 text-black focus:outline-none focus:ring-2 focus:ring-[#c0c231]"
+            className="text-2xl w-full h-40 border border-gray-300 rounded-md p-4 text-black focus:outline-none focus:ring-2 focus:ring-[#c0c231]"
             placeholder="Escribe tu mensaje aquí..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             required
+            style={{ fontFamily: "'Dancing Script', cursive" }}
           />
-          <button
-            type="submit"
-            className="px-6 py-3 bg-[#424319] hover:bg-[#d1ac32] text-white rounded-md shadow-md transition duration-200 text-lg"
-          >
-            Enviar mensaje
-          </button>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className={`px-6 py-3 text-lg font-semibold text-white rounded-md 
+              bg-gradient-to-r from-[#90442a] via-[#005e63] to-[#90442a] shadow-lg 
+              transition-all duration-300 hover:from-[#005e63] hover:via-[#90442a] hover:to-[#005e63] 
+              active:scale-95 focus:outline-none`}
+              style={{ fontFamily: "'Dancing Script', cursive" }}
+            >
+              Enviar mensaje
+            </button>
+          </div>
         </form>
       </div>
 

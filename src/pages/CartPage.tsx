@@ -3,17 +3,29 @@ import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import axios from "axios";
 import TrashButton from "../components/TrashButton";
+import { motion, AnimatePresence } from "framer-motion";
 
-// URL de fallback en caso de error (asegúrate de que exista en tu bucket o donde quieras alojarlo)
+// URL de fallback en caso de error
 const fallbackUrl =
   "https://storage.googleapis.com/ivoiviart-bucket/img/default.jpg";
 
 const CartPage: React.FC = () => {
   const { cart, removeFromCart, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
+  const [itemsToRemove, setItemsToRemove] = useState<number[]>([]);
 
   // Calcular el total del carrito
   const total = cart.reduce((acc, item) => acc + (item.price || 0), 0);
+
+  // ✅ Función mejorada para animación de eliminación
+  const handleRemove = (id: number) => {
+    setItemsToRemove((prev) => [...prev, id]); // Marcamos como "en proceso de eliminar"
+
+    setTimeout(() => {
+      removeFromCart(id); // Eliminamos realmente después de la animación
+      setItemsToRemove((prev) => prev.filter((item) => item !== id));
+    }, 300); // Duración de la animación de salida
+  };
 
   // Función para procesar el pago
   const handlePay = async () => {
@@ -45,9 +57,9 @@ const CartPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-10">
-      <div className="max-w-4xl mx-auto bg-white p-10 rounded-lg shadow-lg">
-        <div className="w-full max-w-4xl">
+    <div className="bg-[rgb(0,94,99)] min-h-screen flex flex-col justify-center items-center pt-20">
+      <div className="max-w-4xl mx-auto bg-[#7fbec2] p-10 rounded-lg shadow-lg">
+        <div className="w-full 5 mx-auto  mb-12">
           <Link
             to="/"
             className="text-gray-800 hover:underline text-lg font-semibold"
@@ -73,44 +85,54 @@ const CartPage: React.FC = () => {
           </p>
         ) : (
           <div>
-            {/* Lista de productos */}
+            {/* Lista de productos con animaciones */}
             <ul>
-              {cart.map((product) => (
-                <li
-                  key={product.id}
-                  className="flex items-center justify-between border-b py-6"
-                >
-                  {/* Imagen miniatura: ya no anteponemos '/', pues product.images[0] es URL completa */}
-                  <img
-                    src={product.images[0]}
-                    alt={product.description}
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = fallbackUrl;
-                    }}
-                    className="w-20 h-20 object-cover rounded-md shadow-sm"
-                  />
+              <AnimatePresence>
+                {cart.map((product) => (
+                  <motion.li
+                    key={product.id} // 🔥 Ahora es 100% único
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5, x: -100 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center justify-between border-b py-6"
+                  >
+                    {/* Imagen miniatura */}
+                    <img
+                      src={product.images[0]}
+                      alt={product.description}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = fallbackUrl;
+                      }}
+                      className="w-20 h-20 object-cover rounded-md shadow-sm"
+                    />
 
-                  {/* Descripción */}
-                  <p className="text-xl text-yellow-700 flex-1 mx-6">
-                    {product.description}
-                  </p>
+                    {/* Descripción */}
+                    <p className="text-xl text-black flex-1 mx-6">
+                      {product.description}
+                    </p>
 
-                  {/* Precio */}
-                  <p className="text-purple-600-700 text-2xl p-4">
-                    ${product.price}
-                  </p>
+                    {/* Precio */}
+                    <p className="text-purple-600-700 text-2xl p-4">
+                      ${product.price}
+                    </p>
 
-                  {/* Botón eliminar */}
-                  <TrashButton onClick={() => removeFromCart(product.id)} />
-                </li>
-              ))}
+                    {/* Botón eliminar con animación */}
+                    <TrashButton
+                      onClick={() => handleRemove(product.id)}
+                      disabled={itemsToRemove.includes(product.id)}
+                    />
+                  </motion.li>
+                ))}
+              </AnimatePresence>
             </ul>
 
             {/* Subtotal y botón para vaciar carrito */}
             <div className="mt-8 text-right pt-4 border-t">
               <h2
-                className="text-3xl font-bold mt-2 tracking-wide bg-gradient-to-r from-[#71ccd1] via-[#005e63] to-[#2a8290] bg-clip-text text-transparent drop-shadow-xl"
+                className="text-3xl font-bold mt-2 tracking-wide bg-gradient-to-r from-[#2a6b6e] via-[#02393c] to-[#155d68] bg-clip-text text-transparent drop-shadow-xl"
                 style={{ WebkitTextStroke: "1px white" }}
               >
                 Total: $ {total.toLocaleString()}
