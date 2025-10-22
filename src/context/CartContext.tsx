@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+/** @jsxImportSource preact */
+import { createContext } from "preact";
+import { useContext, useEffect, useState } from "preact/hooks";
+import type { FunctionalComponent, ComponentChildren } from "preact";
 
-// Define el tipo para los items del carrito
 export interface CartItem {
   id: number;
   price: number;
@@ -8,7 +10,6 @@ export interface CartItem {
   description: string;
 }
 
-// Define la interfaz del contexto
 interface CartContextProps {
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
@@ -16,56 +17,47 @@ interface CartContextProps {
   clearCart: () => void;
 }
 
-// Crea el contexto
 const CartContext = createContext<CartContextProps | undefined>(undefined);
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  // Al iniciar, se recupera el carrito del localStorage o se utiliza un arreglo vacío
+export const CartProvider: FunctionalComponent<{ children?: ComponentChildren }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>(() => {
-    const storedCart = localStorage.getItem("cart");
-    return storedCart ? JSON.parse(storedCart) : [];
+    try {
+      const stored = localStorage.getItem("cart");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
   });
 
-  // Guardar en localStorage cada vez que el carrito cambie
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
+    try {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    } catch {}
   }, [cart]);
 
   const addToCart = (item: CartItem) => {
-    setCart((prevCart) => [
-      ...prevCart,
-      { ...item, cartId: Date.now() + Math.random() }, // ID único basado en timestamp
-    ]);
+    setCart((prev) => [...prev, { ...item, /* puedes agregar cartId si querés */ }]);
   };
 
-  // Elimina solo la primera ocurrencia del item con el id dado
   const removeFromCart = (id: number) => {
-    setCart((prevCart) => {
-      const index = prevCart.findIndex((item) => item.id === id);
-      if (index === -1) return prevCart;
-      return [...prevCart.slice(0, index), ...prevCart.slice(index + 1)];
+    setCart((prev) => {
+      const idx = prev.findIndex((x) => x.id === id);
+      if (idx < 0) return prev;
+      return [...prev.slice(0, idx), ...prev.slice(idx + 1)];
     });
   };
 
-  const clearCart = () => {
-    setCart([]);
-  };
+  const clearCart = () => setCart([]);
 
   return (
-    <CartContext.Provider
-      value={{ cart, addToCart, removeFromCart, clearCart }}
-    >
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
       {children}
     </CartContext.Provider>
   );
 };
 
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
-  return context;
+export const useCart = (): CartContextProps => {
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error("useCart must be used within a CartProvider");
+  return ctx;
 };

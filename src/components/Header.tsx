@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import Logo from "../assets/Logo.jpg";
+import React from "react";
 import { Link } from "react-router-dom";
 import { FaWhatsapp, FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
-import { useCart } from "../context/CartContext"; // Hook del carrito
+import { useCart } from "../context/CartContext";
+import Logo from "../assets/logo.jpg";
 
 const Header: React.FC = () => {
   const whatsappNumberRaw = "+5491166742221";
   const { cart } = useCart();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
 
   const openWhatsapp = () => {
     const whatsappURL = `https://wa.me/${whatsappNumberRaw.replace("+", "")}`;
@@ -15,95 +15,119 @@ const Header: React.FC = () => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-[#5a2b1b] to-[#d6785d] text-white gap-y-14 shadow-lg fixed top-0 w-full z-50 h-[75px] flex items-center">
-      <div className="max-w-6xl mx-auto flex justify-between items-center w-full">
-        {/* Logo y Nombre */}
-        <div className="flex items-center gap-x-3">
-          <Link to="/" className="hover:text-gray-300">
-            <img src={Logo} alt="Logo" className="h-12 w-12 rounded-full" />
-          </Link>
-          <h2
-            className="text-3xl font-bold text-yellow-50 hidden sm:block"
-            style={{ fontFamily: "'Dancing Script', cursive" }}
-          >
-            IvoiviArt
-          </h2>
-        </div>
-
-        {/* Menú Hamburguesa en móviles */}
-        <button
-          className="md:hidden text-2xl"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Menú"
-        >
-          {menuOpen ? <FaTimes /> : <FaBars />}
-        </button>
-
-        {/* Contenedor del Menú */}
-        <div
-          className={`md:flex md:items-center ${
-            menuOpen
-              ? "absolute top-full left-0 w-full bg-[#d6785d] shadow-md flex flex-col py-4 "
-              : "hidden md:flex"
-          } transition-all`}
-        >
-          <ul
-            className="md:flex md:space-x-6 md:text-left w-full font-semibold "
-            style={{
-              fontFamily: "'Dancing Script', cursive",
-            }}
-          >
-            <li className="py-2 md:py-0">
-              <Link
-                to="/"
-                className="text-xl md:text-2xl text-white hover:text-gray-300 block md:inline"
-              >
-                Inicio
-              </Link>
-            </li>
-            <li className="py- md:py-0">
-              <Link
-                to="/acerca"
-                className="text-xl md:text-2xl text-white hover:text-gray-300 block md:inline"
-              >
-                Acerca
-              </Link>
-            </li>
-            <li className="py-4 md:py-0">
-              <Link
-                to="/contacto"
-                className="text-xl md:text-2xl text-white hover:text-gray-300 block md:inline"
-              >
-                Contacto
-              </Link>
-            </li>
-          </ul>
-
-          {/* Botón de WhatsApp (mantiene tamaño) */}
-          <div className="flex justify-center md:justify-start mt-2 md:mt-0 ml-4">
-            <button
-              onClick={openWhatsapp}
-              className="text-green-400 hover:text-green-500 text-3xl transition duration-200 mx-2"
-              aria-label="WhatsApp"
-            >
-              <FaWhatsapp />
-            </button>
-          </div>
-
-          {/* Ícono de Carrito con Notificación (mantiene tamaño) */}
-          <div className="flex justify-right md:justify-start mt-2 md:mt-0">
-            <Link to="/carrito" className="text-white text-3xl relative mx-2">
-              <FaShoppingCart className="hover:text-yellow-300 transition duration-200" />
-              {cart.length > 0 && (
-                <span className="absolute -top-2 -right-3 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {cart.length}
-                </span>
-              )}
+    <>
+      {/* NAV: más alto + gradiente verde a negro */}
+      <nav
+        className="
+          fixed top-0 w-full z-50 
+          text-white 
+          shadow-lg
+          bg-gradient-to-b from-[#005e63] via-[#043b3e] to-[#000000]
+          backdrop-blur-[2px]
+          h-[96px] sm:h-[112px] flex items-center
+        "
+      >
+        <div className="max-w-6xl mx-auto flex justify-between items-center w-full px-4">
+          {/* Logo + Marca */}
+          <div className="flex items-center ">
+            <Link to="/" className="hover:opacity-90 transition-opacity">
+              <img
+                src={Logo}
+                alt="Logo"
+                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full ring-2 ring-white/20"
+              />
             </Link>
+            <h2
+              className="text-3xl sm:text-4xl font-extrabold text-white/95 hidden sm:block tracking-wide"
+            >
+              IvoiviArt
+            </h2>
+          </div>
+
+          {/* Toggle móvil */}
+          <button
+            className="md:hidden text-3xl"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Menú"
+          >
+            {menuOpen ? <FaTimes /> : <FaBars />}
+          </button>
+
+          {/* Menú */}
+          <div
+            className={`
+              md:flex md:items-center
+              ${menuOpen
+                ? "absolute top-full left-0 w-full bg-[#0b2e30] shadow-md flex flex-col py-4"
+                : "hidden md:flex"}
+              transition-all
+            `}
+          >
+            <ul
+              className="
+                md:flex md:space-x-8 md:text-left w-full font-semibold
+                text-white/95
+              "
+              
+            >
+              <li className="py-2 md:py-0">
+                <Link to="/" className="text-xl md:text-2xl hover:text-white">
+                  Inicio
+                </Link>
+              </li>
+              <li className="py-2 md:py-0">
+                <Link to="/acerca" className="text-xl md:text-2xl hover:text-white">
+                  Acerca
+                </Link>
+              </li>
+              <li className="py-2 md:py-0">
+                <Link to="/contacto" className="text-xl md:text-2xl hover:text-white">
+                  Contacto
+                </Link>
+              </li>
+            </ul>
+
+            {/* WhatsApp */}
+            <div className="flex justify-center md:justify-start mt-2 md:mt-0 md:ml-4">
+              <button
+                onClick={openWhatsapp}
+                className="text-3xl transition-transform hover:scale-110 mx-2"
+                aria-label="WhatsApp"
+                title="WhatsApp"
+              >
+                <FaWhatsapp />
+              </button>
+            </div>
+
+            {/* Carrito */}
+            <div className="flex justify-right md:justify-start mt-2 md:mt-0">
+              <Link to="/carrito" className="text-white text-3xl relative mx-2" title="Carrito">
+                <span className="inline-flex hover:scale-110 transition-transform">
+                  <FaShoppingCart />
+                </span>
+                {cart.length > 0 && (
+                  <span className="absolute -top-2 -right-3 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {cart.length}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Línea de transición viva (debajo del header) */}
+      <div
+        className="
+          fixed top-[96px] sm:top-[112px] left-0 w-full z-40
+          h-[3px] sm:h-[4px]
+          bg-gradient-to-r from-[#e6c105] via-[#fff] to-[#e6c105]
+          opacity-80
+        "
+      />
+      {/* empuje del contenido para no quedar debajo del header */}
+      <div className="h-[96px] sm:h-[112px]" />
+    </>
   );
 };
 

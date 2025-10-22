@@ -1,65 +1,64 @@
 import React from "react";
 import { motion } from "framer-motion";
 
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: "easeOut", delay },
+  viewport: { once: true },
+});
+
+const scaleIn = (delay = 0) => ({
+  initial: { opacity: 0, scale: 0.92 },
+  whileInView: { opacity: 1, scale: 1 },
+  transition: { duration: 0.6, ease: "easeOut", delay },
+  viewport: { once: true },
+});
+
 const Acerca: React.FC = () => {
   return (
-    <div className="p-6 bg-[#005e63] min-h-screen text-white flex flex-col items-center justify-center mt-12">
+    <div className="min-h-screen gap-4 bg-[#005e63] text-white flex items-start justify-center pt-28 pb-16 px-4">
       <motion.div
-        className="max-w-3xl text-center"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        style={{ fontFamily: "'Dancing Script', cursive" }}
+        className="w-full max-w-4xl text-center"
+        {...fadeUp(0)}
       >
-        {/* Título principal con mayor tamaño y animación */}
+        {/* Título */}
         <motion.h1
-          className="text-6xl font-extrabold text-[#f0eceb] mb-6 border-b-4 border-[#f0eceb] pb-3"
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="p-10 text-2xl sm:text-5xl md:text-6xl font-extrabold text-[#f0eceb] inline-block border-b-4 border-[#f0eceb] pb-2"
+          {...scaleIn(0)}
         >
           ¡Bienvenid@!
         </motion.h1>
 
-        {/* Animación suave de fade-in para los párrafos */}
+        {/* Intro */}
         <motion.p
-          className="text-3xl text-[#f0eceb] mt-12 leading-relaxed"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2, duration: 0.7 }}
+          className="mt-8 text-lg sm:text-xl md:text-2xl text-[#f0eceb] leading-relaxed"
+          {...fadeUp(0.15)}
         >
           ¡Hola! Bienvenido a{" "}
-          <span className="font-semibold text-yellow-300">IvoIvi Art</span>. Acá
-          vas a encontrar mis obras en{" "}
+          <span className="font-semibold text-yellow-300">Ivoivi Art</span>.
+          Acá vas a encontrar mis obras en{" "}
           <span className="italic text-yellow-300">
             cerámica, pintura y artesanías
           </span>
           , todo único y hecho a mano.
         </motion.p>
 
+        {/* Aclaración tiempos */}
         <motion.p
-          className="text-3xl leading-relaxed text-[#f0eceb] mt-12"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4, duration: 0.7 }}
+          className="mt-10 text-lg sm:text-xl md:text-2xl text-[#f0eceb] leading-relaxed"
+          {...fadeUp(0.3)}
         >
           Tené en cuenta que la realización del producto puede tardar
           aproximadamente{" "}
-          <span className="font-bold text-yellow-400">15 días</span> siempre y
-          cuando no estén realizados. Ojalá disfrutes la visita.
+          <span className="font-bold text-yellow-400">15 días</span>{" "}
+          siempre y cuando no estén realizados. Ojalá disfrutes la visita.
         </motion.p>
 
-        {/* Texto final con una animación escalonada */}
+        {/* Cierre */}
         <motion.p
-          className="text-5xl font-semibold text-yellow-400 mt-16"
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.6, duration: 0.8 }}
+          className="mt-14 text-3xl sm:text-4xl md:text-5xl font-semibold text-yellow-400"
+          {...scaleIn(0.45)}
         >
           ¡Muchas gracias! 🎨✨
         </motion.p>

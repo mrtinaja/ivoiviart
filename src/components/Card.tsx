@@ -1,7 +1,21 @@
 import React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
-import { motion } from "framer-motion";
+
+// Normaliza: "001-movil-dinos.jpg" -> "Movil Dinos"
+const pretty = (s: string) => {
+  const base = (s || "")
+    .replace(/^\s*\d+\s*[-_]?/, "") // prefijo numérico
+    .replace(/\.(jpe?g|png|webp|gif)$/i, "") // extensión
+    .replace(/[-_]+/g, " ") // guiones a espacio
+    .trim();
+
+  return base
+    ? base
+        .toLowerCase()
+        .replace(/\b\p{L}/gu, (m) => m.toUpperCase())
+    : "Sin Título";
+};
 
 type CardProps = {
   image: string;
@@ -9,43 +23,46 @@ type CardProps = {
 };
 
 const Card: React.FC<CardProps> = ({ image, description }) => {
+  const label = pretty(description);
+
   return (
-    <motion.div
-      className="card bg-rgb(0,94,99) shadow-md rounded-lg overflow-hidden"
-      style={{ width: "260px" }}
-      whileHover={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(0,0,0,0.3)" }}
-      transition={{ duration: 0.3 }}
+    <div
+      className="
+        group w-[260px] rounded-xl bg-[#0b2c2e]
+        border border-teal-700/50 shadow-md overflow-hidden
+        transition-transform duration-300 hover:scale-[1.03]
+      "
     >
-      <LazyLoadImage
-        src={image}
-        alt={description}
-        effect="blur"
-        onError={(e) => {
-          e.currentTarget.onerror = null;
-          e.currentTarget.src = "/img/default.jpg";
-        }}
-        style={{
-          width: "100%",
-          height: "350px",
-          objectFit: "cover",
-          padding: "10px",
-        }}
-        className="card-img-top rounded-lg"
-      />
-      <div className="card-body bg-light p-3">
-        <p
-          className="card-text text-center"
-          style={{
-            height: "72px",
-            overflow: "hidden",
-            color: "#d0c9b5",
-            fontFamily: "'Dancing Script', cursive",
+      <div className="relative">
+        <LazyLoadImage
+          src={image}
+          alt={label}
+          effect="blur"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "/img/default.jpg";
           }}
+          className="
+            w-full h-[340px] object-cover
+            transition-transform duration-300
+            group-hover:scale-[1.04]
+            bg-black/30
+          "
+        />
+        {/* línea fina arriba para darle “vida” */}
+        <span className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-teal-400 via-amber-300 to-teal-400 opacity-70" />
+      </div>
+
+      <div className="bg-white/95 p-3">
+        <p
+          className="text-center text-[15px] leading-6 text-neutral-900 truncate"
+          title={label}
+          style={{ fontWeight: 500 }}
         >
-          {description}
+          {label}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

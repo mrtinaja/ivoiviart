@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 
+
 interface ArtisticButtonProps {
   onClick?: () => void;
   children: React.ReactNode;

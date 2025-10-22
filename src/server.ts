@@ -1,51 +1,69 @@
-import express, { Request, Response } from "express";
+// src/server.ts
+import express, { Request, Response, NextFunction, RequestHandler } from "express";
 import axios from "axios";
 import cors from "cors";
+import path from "path";
 import dotenv from "dotenv";
 
-dotenv.config();
+// Cargar .env desde la raíz del proyecto (ivoiviart/.env)
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 const app = express();
 app.use(express.json());
 
-// 📌 Configurar CORS (Opcional: puedes personalizar los orígenes permitidos)
+// --- CORS (ajusta ORIGIN para prod) ---
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 app.use(
   cors({
-    origin: "*", // Cambia esto si querés restringir accesos
-    methods: ["GET", "POST"],
+    origin: ALLOWED_ORIGIN,
+    methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// 📌 Middleware para ver las solicitudes recibidas
-app.use((req, res, next) => {
-  console.log(`📩 Solicitud recibida: ${req.method} ${req.url}`);
+// --- logger simple ---
+app.use((req, _res, next) => {
+  console.log(`📩 ${req.method} ${req.url}`, req.body ?? "");
   next();
 });
 
-// 📌 Verificar si `MP_ACCESS_TOKEN` está definido
+// --- sanity check de credenciales ---
 const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 if (!MP_ACCESS_TOKEN) {
-  console.error("❌ ERROR: MP_ACCESS_TOKEN no está definido en el .env");
+  console.error("❌ MP_ACCESS_TOKEN no está definido en .env");
   process.exit(1);
 }
 
-// 📌 Ruta `/create-preference`
-app.post("/create-preference", async (req: Request, res: Response) => {
-  console.log("📩 POST /create-preference recibido con datos:", req.body);
+// --- helper para errores axios ---
+const toHttpError = (e: any) => ({
+  status: e?.response?.status || 500,
+  payload: e?.response?.data || { message: e?.message || "Internal error" },
+});
+
+// --- endpoint: crear preferencia ---
+const createPreference: RequestHandler = async (req, res) => {
+  // Validación mínima
+  const items = Array.isArray(req.body?.items) ? req.body.items : [];
+  if (!items.length) {
+    return res.status(400).json({ error: "items[] es requerido" });
+  }
+
+  const host =
+    process.env.FRONTEND_BASE_URL ||
+    `http://localhost:${process.env.FRONTEND_PORT || 5173}`;
+
+  const preference = {
+    items, // [{ title, quantity, currency_id: 'ARS', unit_price }, ...]
+    back_urls: {
+      success: `${host}/thank-you`,
+      failure: `${host}/failure`,
+      pending: `${host}/pending`,
+    },
+    auto_return: "approved",
+  };
 
   try {
-    const preference = {
-      items: req.body.items || [],
-      back_urls: {
-        success: "http://localhost:3000/thank-you",
-        failure: "http://localhost:3000/failure",
-        pending: "http://localhost:3000/pending",
-      },
-      auto_return: "approved",
-    };
-
-    const response = await axios.post(
+    const { data } = await axios.post(
       "https://api.mercadopago.com/checkout/preferences",
       preference,
       {
@@ -53,37 +71,42 @@ app.post("/create-preference", async (req: Request, res: Response) => {
           Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
           "Content-Type": "application/json",
         },
+        timeout: 15000,
       }
     );
 
-    console.log("✅ Preferencia creada:", response.data.id);
-    res.json({ id: response.data.id });
-  } catch (error: any) {
-    console.error(
-      "❌ Error al crear la preferencia:",
-      error.response?.data || error.message
-    );
-
-    res.status(error.response?.status || 500).json({
-      error: error.response?.data || "Error interno del servidor",
-    });
+    console.log("✅ Preferencia creada:", data.id);
+    return res.json({ id: data.id, init_point: data.init_point });
+  } catch (e: any) {
+    const err = toHttpError(e);
+    console.error("❌ Error MP:", err.payload);
+    return res.status(err.status).json({ error: err.payload });
   }
+};
+
+app.post("/create-preference", createPreference);
+
+// --- healthcheck + config ---
+app.get("/", (_req, res) => res.send("✅ API OK"));
+app.get("/config", (_req, res) =>
+  res.json({
+    allowedOrigin: ALLOWED_ORIGIN,
+    frontend: process.env.FRONTEND_BASE_URL || null,
+    env: process.env.NODE_ENV || "development",
+  })
+);
+
+// --- 404 ---
+app.use((_req, res) => res.status(404).json({ error: "Not found" }));
+
+// --- manejador de errores ---
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("💥 Unhandled:", err);
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
-// 📌 Ruta de prueba para verificar si el servidor responde correctamente
-app.get("/", (req, res) => {
-  res.send("✅ Servidor funcionando correctamente");
-});
-
-// 📌 Verificación de rutas registradas
-app._router.stack.forEach((r: any) => {
-  if (r.route && r.route.path) {
-    console.log(`📌 Ruta registrada: ${r.route.path}`);
-  }
-});
-
-// 📌 Definir el puerto desde `.env` o usar 8080 por defecto
-const PORT = process.env.PORT || 8080;
+// --- start ---
+const PORT = Number(process.env.PORT) || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`🚀 Server listening at http://localhost:${PORT}`);
 });
