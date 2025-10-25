@@ -13,6 +13,7 @@ import { CartProvider } from "./context/CartContext";
 import { MediaProvider } from "./services/media";
 
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 const App: FunctionalComponent = () => {
   return (
@@ -27,6 +28,7 @@ const App: FunctionalComponent = () => {
           <Route path="/carrito" element={<CartPage />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
         </Routes>
+        <Footer />
       </CartProvider>
     </MediaProvider>
   );

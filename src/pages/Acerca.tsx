@@ -17,7 +17,7 @@ const scaleIn = (delay = 0) => ({
 
 const Acerca: React.FC = () => {
   return (
-    <div className="min-h-screen gap-4 bg-[#005e63] text-white flex items-start justify-center pt-28 pb-16 px-4">
+    <div className="min-h-screen gap-4 bg-[#05282a] text-white flex items-start justify-center pt-28 pb-16 px-4">
       <motion.div
         className="w-full max-w-4xl text-center"
         {...fadeUp(0)}

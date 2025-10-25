@@ -40,11 +40,11 @@ const Contacto: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#005e63] min-h-screen flex items-center justify-center text-black p-4">
-      <div className="w-full max-w-5xl bg-[#7fbec2] p-8 rounded-lg shadow-2xl">
-        <h2 className="text-4xl font-bold mb-6">Contacto</h2>
+    <div className="bg-[#042021] min-h-screen flex items-center justify-center text-white p-4">
+      <div className="w-full max-w-3xl bg-[#102c2e] p-8 rounded-lg shadow-2xl">
+        <h2 className="text-2xl font-bold mb-6">Contacto</h2>
 
-        <p className="text-2xl mb-6">
+        <p className="text-1xl mb-6">
           Déjanos un mensaje o sugerencia. Estamos atentos a tus comentarios.
         </p>
 
@@ -57,7 +57,7 @@ const Contacto: React.FC = () => {
               id="fromName"
               name="fromName"
               type="text"
-              className="text-2xl w-full border border-gray-300 rounded-md p-4 text-black focus:outline-none focus:ring-2 focus:ring-[#c0c231]"
+              className="text-sxl w-full border border-gray-300 rounded-md p-4 text-black focus:outline-none focus:ring-2 focus:ring-[#c0c231]"
               placeholder="Tu nombre"
               value={fromName}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -75,7 +75,7 @@ const Contacto: React.FC = () => {
             <textarea
               id="message"
               name="message"
-              className="text-2xl w-full h-40 border border-gray-300 rounded-md p-4 text-black focus:outline-none focus:ring-2 focus:ring-[#c0c231]"
+              className="text-1xl w-full h-40 border border-gray-300 rounded-md p-4 text-black focus:outline-none focus:ring-2 focus:ring-[#c0c231]"
               placeholder="Escribe tu mensaje aquí..."
               value={message}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>

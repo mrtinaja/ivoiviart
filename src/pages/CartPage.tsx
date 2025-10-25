@@ -1,3 +1,4 @@
+// src/pages/CartPage.tsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -5,18 +6,23 @@ import axios from "axios";
 import TrashButton from "../components/TrashButton";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Paleta coherente con el sitio
-const BG = "#0b1111";            // fondo general
-const PANEL = "#0f1b1b";         // panel oscuro
+// Paleta
+const BG = "#0b1111";
+const PANEL = "#0f1b1b";
 const BORDER = "rgba(255,255,255,0.08)";
-const INK = "#eae8e6";           // texto claro
-const SUBTLE = "#cfd2d1";        // texto leve
-const BRAND = "#0d777b";         // teal marca
-const DARK = "#000000";          // negro botones
-const NEUTRAL = "#1f2a2a";       // botón neutro
+const INK = "#eae8e6";
+const SUBTLE = "#cfd2d1";
+const BRAND = "#0d777b";
+const DARK = "#000000";
+const NEUTRAL = "#1f2a2a";
 
-const fallbackUrl =
-  "https://storage.googleapis.com/ivoiviart-bucket/img/default.jpg";
+// Placeholder inline (sin CORS/404)
+const FALLBACK_IMG =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='100%' height='100%' fill='%23161a1d'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23a1a1a1' font-family='sans-serif' font-size='12'>sin imagen</text></svg>";
+
+// Base de API: usa /api (proxy) o env
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+const api = axios.create({ baseURL: API_BASE, timeout: 12000 });
 
 const CartPage: React.FC = () => {
   const { cart, removeFromCart, clearCart } = useCart();
@@ -40,26 +46,43 @@ const CartPage: React.FC = () => {
     }
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:8080/create-preference", {
+      const payload = {
         items: cart.map((p) => ({
-          title: p.description,
-          unit_price: p.price,
+          title: p.description || "Producto",
+          unit_price: Number(p.price || 0),
           quantity: 1,
+          currency_id: "ARS",
         })),
-      });
-      window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference_id=${res.data.id}`;
-    } catch (e) {
+      };
+
+      const res = await api.post("/create-preference", payload);
+
+      const { init_point, id } = res.data || {};
+      const url =
+        init_point ||
+        (id
+          ? `https://www.mercadopago.com.ar/checkout/v1/redirect?preference_id=${id}`
+          : null);
+
+      if (!url) throw new Error("Respuesta inválida del servidor de pagos.");
+      window.location.href = url;
+    } catch (e: any) {
       console.error("Error al procesar el pago:", e);
+      const msg =
+        e?.code === "ERR_NETWORK"
+          ? "No pude conectar con el servidor de pagos. ¿Está levantado el backend?"
+          : e?.response?.data?.error?.message ||
+            e?.response?.data?.message ||
+            e?.message ||
+            "No se pudo iniciar el pago.";
+      alert(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      className="min-h-screen w-full pt-24 pb-16"
-      style={{ backgroundColor: BG, color: INK }}
-    >
+    <div className="min-h-screen w-full pt-24 pb-16" style={{ backgroundColor: BG, color: INK }}>
       <div className="max-w-5xl mx-auto px-4">
         <div className="mb-6">
           <Link to="/" className="text-sm tracking-wide" style={{ color: SUBTLE }}>
@@ -69,13 +92,7 @@ const CartPage: React.FC = () => {
 
         <h1 className="text-3xl md:text-4xl font-extrabold mb-8">Tu carrito</h1>
 
-        <div
-          className="w-full shadow-xl"
-          style={{
-            backgroundColor: PANEL,
-            border: `1px solid ${BORDER}`,
-          }}
-        >
+        <div className="w-full shadow-xl" style={{ backgroundColor: PANEL, border: `1px solid ${BORDER}` }}>
           {cart.length === 0 ? (
             <div className="p-10 text-center">
               <p className="text-base md:text-lg" style={{ color: SUBTLE }}>
@@ -84,11 +101,7 @@ const CartPage: React.FC = () => {
               <Link
                 to="/"
                 className="inline-block mt-6 px-6 py-3 font-semibold shadow-lg hover:opacity-90 transition"
-                style={{
-                  backgroundColor: DARK,
-                  color: INK,
-                  border: `1px solid ${BORDER}`,
-                }}
+                style={{ backgroundColor: DARK, color: INK, border: `1px solid ${BORDER}` }}
               >
                 Explorar productos
               </Link>
@@ -109,10 +122,10 @@ const CartPage: React.FC = () => {
                       style={{ borderColor: BORDER }}
                     >
                       <img
-                        src={product.images?.[0] || fallbackUrl}
+                        src={product.images?.[0] || FALLBACK_IMG}
                         alt={product.description}
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = fallbackUrl;
+                          (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG;
                         }}
                         className="w-20 h-20 object-cover"
                         style={{ border: `1px solid ${BORDER}` }}
@@ -139,9 +152,8 @@ const CartPage: React.FC = () => {
                 </AnimatePresence>
               </ul>
 
-              {/* Footer del panel */}
+              {/* Footer */}
               <div className="pt-6 border-t" style={{ borderColor: BORDER }}>
-                {/* Total */}
                 <div className="flex items-end justify-between mb-4">
                   <span style={{ color: SUBTLE }}>Subtotal</span>
                   <span className="text-2xl md:text-3xl font-bold">
@@ -149,16 +161,11 @@ const CartPage: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Acciones: móvil apilado full; desktop a la derecha en fila */}
                 <div className="grid grid-cols-1 gap-3 md:flex md:justify-end">
                   <button
                     onClick={clearCart}
                     className="w-full md:w-auto px-6 py-3 font-semibold shadow-lg hover:opacity-90 transition"
-                    style={{
-                      backgroundColor: NEUTRAL,
-                      color: INK,
-                      border: `1px solid ${BORDER}`,
-                    }}
+                    style={{ backgroundColor: NEUTRAL, color: INK, border: `1px solid ${BORDER}` }}
                   >
                     Vaciar carrito
                   </button>
@@ -166,11 +173,7 @@ const CartPage: React.FC = () => {
                   <Link
                     to="/"
                     className="w-full md:w-auto px-6 py-3 text-center font-semibold shadow-lg hover:opacity-90 transition"
-                    style={{
-                      backgroundColor: DARK,
-                      color: INK,
-                      border: `1px solid ${BORDER}`,
-                    }}
+                    style={{ backgroundColor: DARK, color: INK, border: `1px solid ${BORDER}` }}
                   >
                     Seguir comprando
                   </Link>
@@ -179,11 +182,7 @@ const CartPage: React.FC = () => {
                     onClick={handlePay}
                     disabled={loading}
                     className="w-full md:w-auto px-6 py-3 font-semibold shadow-lg hover:opacity-90 transition disabled:opacity-60"
-                    style={{
-                      backgroundColor: BRAND,
-                      color: "#fff",
-                      border: `1px solid ${BORDER}`,
-                    }}
+                    style={{ backgroundColor: BRAND, color: "#fff", border: `1px solid ${BORDER}` }}
                   >
                     {loading ? "Procesando…" : "Pagar con Mercado Pago"}
                   </button>

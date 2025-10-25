@@ -78,7 +78,7 @@ const Footer: React.FC = () => {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-16 bg-[#061f20] text-gray-300 border-t border-emerald-900/40">
+    <footer className=" bg-[#061f20] text-gray-300 border-t border-emerald-900/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           {/* Marca / copy corto */}

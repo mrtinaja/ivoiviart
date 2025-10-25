@@ -4,63 +4,86 @@ import axios from "axios";
 import cors from "cors";
 import path from "path";
 import dotenv from "dotenv";
+import crypto from "crypto";
 
-// Cargar .env desde la raíz del proyecto (ivoiviart/.env)
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 const app = express();
 app.use(express.json());
 
-// --- CORS (ajusta ORIGIN para prod) ---
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
+/* ---------------- CORS ---------------- */
+const ORIGINS = (process.env.ALLOWED_ORIGIN || "http://localhost:3000")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: ALLOWED_ORIGIN,
+    origin: ORIGINS,
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Idempotency-Key"],
   })
 );
+app.options("*", cors());
 
-// --- logger simple ---
+/* ------------- Logging simple --------- */
 app.use((req, _res, next) => {
-  console.log(`📩 ${req.method} ${req.url}`, req.body ?? "");
+  console.log(`📩 ${req.method} ${req.url}`, Object.keys(req.body || {}).length ? req.body : "");
   next();
 });
 
-// --- sanity check de credenciales ---
+/* --------- Credenciales MP ----------- */
 const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 if (!MP_ACCESS_TOKEN) {
   console.error("❌ MP_ACCESS_TOKEN no está definido en .env");
   process.exit(1);
 }
 
-// --- helper para errores axios ---
-const toHttpError = (e: any) => ({
-  status: e?.response?.status || 500,
-  payload: e?.response?.data || { message: e?.message || "Internal error" },
-});
+/* -------------- Helpers -------------- */
+const isHttpUrl = (u: string) => /^https?:\/\//i.test(u);
+const trimSlash = (u: string) => u.replace(/\/$/, "");
 
-// --- endpoint: crear preferencia ---
+const getFrontendBase = (req?: Request) => {
+  const fromEnv = (process.env.FRONTEND_BASE_URL || "").trim();
+  if (isHttpUrl(fromEnv)) return trimSlash(fromEnv);
+  const fromOrigin = (req?.headers.origin || "").toString().trim();
+  if (isHttpUrl(fromOrigin)) return trimSlash(fromOrigin);
+  return "http://localhost:3000";
+};
+
+const idemKey = (obj: unknown) =>
+  crypto.createHash("sha256").update(JSON.stringify(obj)).digest("hex");
+
+/* -------------- Endpoint ------------- */
 const createPreference: RequestHandler = async (req, res) => {
-  // Validación mínima
-  const items = Array.isArray(req.body?.items) ? req.body.items : [];
-  if (!items.length) {
-    return res.status(400).json({ error: "items[] es requerido" });
+  const rawItems = Array.isArray(req.body?.items) ? req.body.items : [];
+  if (!rawItems.length) return res.status(400).json({ error: "items[] es requerido" });
+
+  // Normaliza tipos para evitar 400 de MP
+  const items = rawItems.map((it: any) => ({
+    title: String(it?.title || "Producto"),
+    quantity: Number(it?.quantity || 1),
+    unit_price: Number(it?.unit_price || 0),
+    currency_id: String(it?.currency_id || "ARS"),
+  }));
+
+  const base = getFrontendBase(req);
+  const back_urls = {
+    success: `${base}/thank-you`,
+    failure: `${base}/failure`,
+    pending: `${base}/pending`,
+  };
+
+  // Construcción del payload. SIN auto_return por defecto.
+  const preference: any = { items, back_urls };
+
+  // Si querés auto-redirect, habilitalo con MP_AUTO_RETURN=approved|all
+  const AUTO = (process.env.MP_AUTO_RETURN || "").trim();
+  if ((AUTO === "approved" || AUTO === "all") && isHttpUrl(back_urls.success)) {
+    preference.auto_return = AUTO;
   }
 
-  const host =
-    process.env.FRONTEND_BASE_URL ||
-    `http://localhost:${process.env.FRONTEND_PORT || 5173}`;
-
-  const preference = {
-    items, // [{ title, quantity, currency_id: 'ARS', unit_price }, ...]
-    back_urls: {
-      success: `${host}/thank-you`,
-      failure: `${host}/failure`,
-      pending: `${host}/pending`,
-    },
-    auto_return: "approved",
-  };
+  console.log("➡️ Payload a MP:", JSON.stringify(preference, null, 2));
 
   try {
     const { data } = await axios.post(
@@ -70,42 +93,47 @@ const createPreference: RequestHandler = async (req, res) => {
         headers: {
           Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
           "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Idempotency-Key": idemKey(preference),
         },
         timeout: 15000,
       }
     );
 
     console.log("✅ Preferencia creada:", data.id);
-    return res.json({ id: data.id, init_point: data.init_point });
+    res.json({
+      id: data.id,
+      init_point: data.init_point || data.sandbox_init_point || null,
+    });
   } catch (e: any) {
-    const err = toHttpError(e);
-    console.error("❌ Error MP:", err.payload);
-    return res.status(err.status).json({ error: err.payload });
+    const status = e?.response?.status || 500;
+    const payload = e?.response?.data || { message: e?.message || "Internal error" };
+    console.error("❌ Error MP:", payload);
+    res.status(status).json({ error: payload });
   }
 };
 
 app.post("/create-preference", createPreference);
 
-// --- healthcheck + config ---
+/* --------- Health & config ----------- */
 app.get("/", (_req, res) => res.send("✅ API OK"));
-app.get("/config", (_req, res) =>
+app.get("/config", (req, res) =>
   res.json({
-    allowedOrigin: ALLOWED_ORIGIN,
-    frontend: process.env.FRONTEND_BASE_URL || null,
+    origins: ORIGINS,
+    frontendBase: getFrontendBase(req),
     env: process.env.NODE_ENV || "development",
+    autoReturn: process.env.MP_AUTO_RETURN || null,
   })
 );
 
-// --- 404 ---
+/* -------------- 404 & error ---------- */
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));
-
-// --- manejador de errores ---
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error("💥 Unhandled:", err);
   res.status(500).json({ error: "Internal Server Error" });
 });
 
-// --- start ---
+/* --------------- Start ---------------- */
 const PORT = Number(process.env.PORT) || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server listening at http://localhost:${PORT}`);
