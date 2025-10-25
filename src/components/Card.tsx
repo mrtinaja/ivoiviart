@@ -15,7 +15,12 @@ const pretty = (s: string) => {
     : "Sin Título";
 };
 
-type CardProps = { image: string; description: string };
+type CardProps = {
+  image: string;
+  description: string;
+  /** NEW: variante de tamaño para home */
+  size?: "normal" | "compact";
+};
 
 const FALLBACK = "/img/default.jpg";
 
@@ -47,7 +52,7 @@ const slugFromDesc = (s: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
-const Card: React.FC<CardProps> = ({ image, description }) => {
+const Card: React.FC<CardProps> = ({ image, description, size = "normal" }) => {
   const label = pretty(description);
 
   const candidates = useMemo(() => {
@@ -74,6 +79,10 @@ const Card: React.FC<CardProps> = ({ image, description }) => {
       ? image
       : candidates[0] ?? FALLBACK;
 
+  // alturas segun tamaño
+  const imgHeight =
+    size === "compact" ? "h-[220px] md:h-[240px]" : "h-[340px]";
+
   return (
     <div
       className="
@@ -81,6 +90,7 @@ const Card: React.FC<CardProps> = ({ image, description }) => {
         border border-teal-700/50 shadow-md overflow-hidden
         transition-transform duration-300 hover:scale-[1.03]
       "
+      data-card
     >
       <div className="relative">
         <LazyLoadImage
@@ -90,32 +100,35 @@ const Card: React.FC<CardProps> = ({ image, description }) => {
           onError={(e) => {
             const el = e.currentTarget as HTMLImageElement;
             const i = Number(el.dataset.try || "0");
-            const next = candidates[i] || FALLBACK;
+            const next = candidates[Math.min(i, candidates.length - 1)] || FALLBACK;
 
-            if (el.src.endsWith(next) || i >= candidates.length - 1) {
+            // si no avanzamos más, fijamos fallback y cortamos
+            const same =
+              el.src.endsWith(next) || i >= candidates.length - 1;
+            if (same) {
               el.onerror = null;
-              console.warn("[Card] fallback final ->", FALLBACK, "desc:", description);
               el.src = FALLBACK;
               return;
             }
 
-            console.warn("[Card] load error, probando ->", next, "desc:", description);
             el.dataset.try = String(i + 1);
             el.src = next;
           }}
-          className="
-            w-full h-[340px] object-cover
+          className={`
+            w-full ${imgHeight} object-cover
             transition-transform duration-300
             group-hover:scale-[1.04]
             bg-black/30
-          "
+          `}
         />
         <span className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-teal-400 via-amber-300 to-teal-400 opacity-70" />
       </div>
 
       <div className="bg-white/95 p-3">
         <p
-          className="text-center text-[15px] leading-6 text-neutral-900 truncate"
+          className={`text-center ${
+            size === "compact" ? "text-[14px]" : "text-[15px]"
+          } leading-6 text-neutral-900 truncate`}
           title={label}
           style={{ fontWeight: 500 }}
         >
