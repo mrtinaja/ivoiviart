@@ -1,10 +1,19 @@
 [build]
-  command   = "npm run build"
-  publish   = "dist"
+  command = "npm run build"
+  publish = "dist"
   functions = "netlify/functions"
 
+# Proxy del API (lo que ya tienes)
 [[redirects]]
   from = "/api/create-preference"
-  to   = "/.netlify/functions/create-preference"
+  to = "/.netlify/functions/create-preference"
   status = 200
   force = true
+
+[build.environment]
+  # Estas claves del front son públicas; dile a Netlify que no corte el build
+  SECRETS_SCAN_OMIT_KEYS = "VITE_FIREBASE_API_KEY,VITE_FIREBASE_APP_ID,VITE_FIREBASE_AUTH_DOMAIN,VITE_FIREBASE_MESSAGING_SENDER_ID,VITE_FIREBASE_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET"
+  # opcional si quieres evitar falsos positivos en archivos generados
+  SECRETS_SCAN_OMIT_PATHS = "dist/**"
+  # (alternativa drástica) para apagar el escaneo:
+  # SECRETS_SCAN_ENABLED = "false"
