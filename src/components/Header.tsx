@@ -10,7 +10,8 @@ import {
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
-import Logo from "../assets/logo.jpg";
+
+const logoSrc = "/Logo.jpg";
 
 /** WhatsApp */
 const WHATSAPP = "+5491166742221";
@@ -119,7 +120,7 @@ const Header: React.FC = () => {
           <div className="flex items-center">
             <Link to="/" className="hover:opacity-90 transition-opacity">
               <img
-                src={Logo}
+                src={logoSrc}
                 alt="Logo"
                 className="h-14 w-14 sm:h-16 sm:w-16 rounded-full ring-2 ring-white/20"
               />
