@@ -11,7 +11,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
 
-const logoSrc = "/Logo.jpg";
+
 
 /** WhatsApp */
 const WHATSAPP = "+5491166742221";
@@ -119,9 +119,9 @@ const Header: React.FC = () => {
           {/* Logo + Marca */}
           <div className="flex items-center">
             <Link to="/" className="hover:opacity-90 transition-opacity">
-              <img
-                src={logoSrc}
-                alt="Logo"
+             <img
+                src="/logo.jpg"
+                alt="logo"
                 className="h-14 w-14 sm:h-16 sm:w-16 rounded-full ring-2 ring-white/20"
               />
             </Link>
