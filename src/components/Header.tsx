@@ -38,7 +38,7 @@ const Header: React.FC = () => {
               />
             </Link>
             <h2
-              className="text-3xl sm:text-4xl font-extrabold text-white/95 hidden sm:block tracking-wide"
+              className="text-3xl sm:text-3xl font-bold text-white/95 hidden sm:block tracking-wide ml-4"
             >
               IvoiviArt
             </h2>
@@ -71,17 +71,17 @@ const Header: React.FC = () => {
               
             >
               <li className="py-2 md:py-0">
-                <Link to="/" className="text-xl md:text-2xl hover:text-white">
+                <Link to="/" className="text-xl md:text-1xl hover:text-white">
                   Inicio
                 </Link>
               </li>
               <li className="py-2 md:py-0">
-                <Link to="/acerca" className="text-xl md:text-2xl hover:text-white">
+                <Link to="/acerca" className="text-xl md:text-1xl hover:text-white">
                   Acerca
                 </Link>
               </li>
               <li className="py-2 md:py-0">
-                <Link to="/contacto" className="text-xl md:text-2xl hover:text-white">
+                <Link to="/contacto" className="text-xl md:text-1xl hover:text-white">
                   Contacto
                 </Link>
               </li>
