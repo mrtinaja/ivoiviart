@@ -232,7 +232,6 @@ const Home: React.FC = () => {
         <CarouselRow title="Recomendados" items={fila2} />
         <CarouselRow title="Destacados" items={fila3} />
       </main>
-      <Footer />
     </div>
   );
 };

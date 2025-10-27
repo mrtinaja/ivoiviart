@@ -86,7 +86,7 @@ const Card: React.FC<CardProps> = ({ image, description, size = "normal" }) => {
   return (
     <div
       className="
-        group w-full rounded-xl bg-[#0b2c2e]
+        group w-55 rounded-xl bg-[#0b2c2e]
         border border-teal-700/50 shadow-md overflow-hidden
         transition-transform duration-300 hover:scale-[1.03]
       "

@@ -375,6 +375,13 @@ const ProductDetails: React.FC = () => {
 
           {/* Acciones */}
           <div className="flex flex-col sm:flex-row gap-3 mt-8 sm:mt-10 justify-center w-full max-w-xl">
+             <Link
+              to="/"
+              aria-label="Volver a la Galería"
+              className="w-full text-center rounded-none py-4 bg-[#0b0b0b] text-[#eae8e6] font-semibold shadow-[0_12px_32px_rgba(0,0,0,.6)] active:scale-[.98] transition-transform duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+            >
+              Volver a la Galería
+            </Link>
             <button
               onClick={handleAddToCart}
               aria-label="Añadir al carrito"
@@ -391,13 +398,7 @@ const ProductDetails: React.FC = () => {
               🛒 Ir al carrito
             </button>
 
-            <Link
-              to="/"
-              aria-label="Volver a la Galería"
-              className="w-full text-center rounded-none py-4 bg-[#0b0b0b] text-[#eae8e6] font-semibold shadow-[0_12px_32px_rgba(0,0,0,.6)] active:scale-[.98] transition-transform duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
-            >
-              Volver a la Galería
-            </Link>
+           
           </div>
         </div>
       </div>
