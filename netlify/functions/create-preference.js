@@ -87,7 +87,8 @@ export const handler = async (event) => {
         method: "POST",
         headers: {
           Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
-          "Content-Type:": "application/json",
+          // 👇 ACÁ ESTABA EL ERROR: SIN DOS PUNTOS
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(preference),
       }
