@@ -2,9 +2,8 @@
 import React, {
   useMemo,
   useRef,
-  useLayoutEffect,
-  useState,
   useEffect,
+  useState,
 } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
@@ -16,18 +15,23 @@ import { useMedia } from "../services/media";
 ================================== */
 
 const debug =
-  typeof window !== "undefined" &&
-  new URLSearchParams(window.location.search).has("debug");
+  typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).has("debug")
+    : false;
 
 const pickCover = (arr?: string[] | null): string => {
-  if (!arr || !Array.isArray(arr) || arr.length === 0) return "/img/default.jpg";
-  const url = arr.find(
-    (u) =>
-      typeof u === "string" &&
-      u.trim().length > 0 &&
-      !/^(null|undefined)$/i.test(u) &&
-      (/^https?:\/\//i.test(u) || u.startsWith("/img/"))
-  );
+  if (!arr?.length) return "/img/default.jpg";
+
+  const url = arr.find((u) => {
+    if (typeof u !== "string" || !u.trim()) return false;
+    if (/^(null|undefined)$/i.test(u)) return false;
+    try {
+      return /^https?:\/\//i.test(u) || u.startsWith("/img/");
+    } catch {
+      return false;
+    }
+  });
+
   return url ?? "/img/default.jpg";
 };
 
@@ -38,14 +42,6 @@ const toTitle = (s?: string) =>
     .replace(/[-_]+/g, " ")
     .trim();
 
-type RawItem = {
-  id: string;
-  code?: string | number;
-  description?: string;
-  images?: string[];
-  price?: number | null;
-};
-
 type Product = {
   id: string;
   code?: string | number;
@@ -54,7 +50,7 @@ type Product = {
   price: number | null;
 };
 
-const groupByProduct = (list: RawItem[]): Product[] => {
+const groupByProduct = (list: Product[]): Product[] => {
   const map = new Map<string, Product>();
 
   for (const it of list) {
@@ -76,16 +72,15 @@ const groupByProduct = (list: RawItem[]): Product[] => {
   return Array.from(map.values());
 };
 
-const splitIntoThree = <T,>(arr: T[]) => {
-  const a: T[] = [], b: T[] = [], c: T[] = [];
-  arr.forEach((item, i) => {
-    const m = i % 3;
-    if (m === 0) a.push(item);
-    else if (m === 1) b.push(item);
-    else c.push(item);
-  });
-  return { a, b, c };
-};
+const splitIntoThree = <T,>(arr: T[]) =>
+  arr.reduce<{ a: T[]; b: T[]; c: T[] }>(
+    (acc, item, i) => {
+      const key = ["a", "b", "c"][i % 3] as "a" | "b" | "c";
+      acc[key].push(item);
+      return acc;
+    },
+    { a: [], b: [], c: [] }
+  );
 
 /* ================================
    Carrusel
@@ -93,16 +88,14 @@ const splitIntoThree = <T,>(arr: T[]) => {
 
 type CarouselRowProps = { title: string; items: Product[] };
 
-// compact: un poco menos de gap/padding
 const GAP_PX = 12;
 const PAD_PX = 12;
 
-// mostramos más “anchos” para que se vea más chico
 const computeVisible = (w: number) => {
-  if (w < 480) return 1.6;     // 1 grande + asomo generoso
-  if (w < 768) return 2.6;     // mobile grande
-  if (w < 1024) return 3.4;    // tablet
-  return 5;                    // desktop
+  if (w < 480) return 1.6;
+  if (w < 768) return 2.6;
+  if (w < 1024) return 3.4;
+  return 5;
 };
 
 const CarouselRow: React.FC<CarouselRowProps> = ({ title, items }) => {
@@ -111,7 +104,7 @@ const CarouselRow: React.FC<CarouselRowProps> = ({ title, items }) => {
     typeof window !== "undefined" ? computeVisible(window.innerWidth) : 5
   );
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const onResize = () => setVisible(computeVisible(window.innerWidth));
     onResize();
     window.addEventListener("resize", onResize);
@@ -120,7 +113,7 @@ const CarouselRow: React.FC<CarouselRowProps> = ({ title, items }) => {
 
   const itemW = `calc((100% - ${PAD_PX * 2}px - ${GAP_PX} * (${Math.ceil(
     visible
-  ) - 1})) / ${visible})`;
+  )} - 1)) / ${visible})`;
 
   const page = (dir: 1 | -1) => {
     const el = scrollerRef.current;
@@ -130,6 +123,11 @@ const CarouselRow: React.FC<CarouselRowProps> = ({ title, items }) => {
     const cardW = first.getBoundingClientRect().width;
     const step = Math.max(1, Math.floor(visible - 0.2));
     el.scrollBy({ left: (cardW + GAP_PX) * step * dir, behavior: "smooth" });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "ArrowLeft") page(-1);
+    if (e.key === "ArrowRight") page(1);
   };
 
   if (!items.length) return null;
@@ -142,17 +140,21 @@ const CarouselRow: React.FC<CarouselRowProps> = ({ title, items }) => {
         {title}
       </h2>
 
-      {/* Flechas (solo md+) */}
+      {/* Flechas */}
       <button
         onClick={() => page(-1)}
-        className={`${showArrows ? "hidden md:flex" : "hidden"} absolute left-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 items-center justify-center bg-black/50 hover:bg-black/70 text-white rounded-full`}
+        className={`${
+          showArrows ? "hidden md:flex" : "hidden"
+        } absolute left-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 items-center justify-center bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors`}
         aria-label="Anterior"
       >
         ‹
       </button>
       <button
         onClick={() => page(1)}
-        className={`${showArrows ? "hidden md:flex" : "hidden"} absolute right-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 items-center justify-center bg-black/50 hover:bg-black/70 text-white rounded-full`}
+        className={`${
+          showArrows ? "hidden md:flex" : "hidden"
+        } absolute right-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 items-center justify-center bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors`}
         aria-label="Siguiente"
       >
         ›
@@ -161,7 +163,11 @@ const CarouselRow: React.FC<CarouselRowProps> = ({ title, items }) => {
       {/* Track */}
       <div
         ref={scrollerRef}
-        className="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth scrollbar-hide min-w-0"
+        role="region"
+        aria-label={`Carrusel de ${title}`}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        className="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth scrollbar-hide min-w-0 focus:outline-none focus:ring-2 focus:ring-blue-500/50 rounded"
         style={{ gap: `${GAP_PX}px`, paddingInline: `${PAD_PX}px` }}
       >
         {items.map((p) => {
@@ -170,6 +176,7 @@ const CarouselRow: React.FC<CarouselRowProps> = ({ title, items }) => {
             <Link
               to={`/product/${p.id}`}
               key={p.id}
+              data-card
               className="snap-start shrink-0 min-w-0 block"
               aria-label={p.description}
               style={{ width: itemW, flex: `0 0 ${itemW}`, maxWidth: itemW }}
@@ -184,6 +191,55 @@ const CarouselRow: React.FC<CarouselRowProps> = ({ title, items }) => {
     </section>
   );
 };
+
+/* ================================
+   Loading Skeleton
+================================== */
+
+const LoadingSkeleton: React.FC = () => (
+  <div className="min-h-screen bg-gradient-to-b from-[#031a1a] to-black">
+    <div className="h-[80px]" />
+    <div className="space-y-8 p-8 max-w-7xl mx-auto">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="animate-pulse">
+          <div className="h-6 bg-gray-700 rounded w-48 mb-4" />
+          <div className="flex gap-4 overflow-hidden">
+            {[1, 2, 3, 4, 5].map((j) => (
+              <div
+                key={j}
+                className="h-64 bg-gray-700 rounded-lg flex-1 min-w-[200px]"
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ================================
+   Error State
+================================== */
+
+const ErrorState: React.FC<{ error: unknown }> = ({ error }) => (
+  <div className="min-h-screen bg-gradient-to-b from-[#031a1a] to-black flex items-center justify-center p-4">
+    <div className="text-center max-w-md">
+      <div className="text-6xl mb-4">😕</div>
+      <h2 className="text-2xl text-red-300 mb-4 font-semibold">
+        Oops, algo salió mal
+      </h2>
+      <p className="text-gray-400 mb-6 text-sm">
+        {error instanceof Error ? error.message : String(error)}
+      </p>
+      <button
+        onClick={() => window.location.reload()}
+        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+      >
+        Reintentar
+      </button>
+    </div>
+  </div>
+);
 
 /* ================================
    Home
@@ -216,13 +272,16 @@ const Home: React.FC = () => {
     console.log("productos agrupados:", products.length);
     console.log("únicos (ids):", setIds.size);
     console.log("sin imágenes:", sinImgs.length, sinImgs.map((p) => p.id));
-    console.log("con cover default:", conDefault.length, conDefault.map((p) => p.id));
+    console.log(
+      "con cover default:",
+      conDefault.length,
+      conDefault.map((p) => p.id)
+    );
     console.groupEnd();
   }, [debug, loading, media, products]);
 
-  if (loading) return <div className="p-8 text-[#f0eceb]">cargando…</div>;
-  if (error)
-    return <div className="p-8 text-red-300">Error cargando: {String(error)}</div>;
+  if (loading) return <LoadingSkeleton />;
+  if (error) return <ErrorState error={error} />;
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-[#031a1a] to-black">
