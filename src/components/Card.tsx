@@ -90,9 +90,8 @@ const Card: React.FC<CardProps> = ({ image, description, size = "normal" }) => {
         border border-teal-700/50 shadow-md overflow-hidden
         transition-transform duration-300 hover:scale-[1.03]
       "
-      data-card
     >
-      <div className="relative">
+      <div className="relative pointer-events-none">
         <LazyLoadImage
           src={initialSrc}
           alt={label}
@@ -124,7 +123,7 @@ const Card: React.FC<CardProps> = ({ image, description, size = "normal" }) => {
         <span className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-teal-400 via-amber-300 to-teal-400 opacity-70" />
       </div>
 
-      <div className="bg-white/95 p-3">
+      <div className="bg-white/95 p-3 pointer-events-none">
         <p
           className={`text-center ${
             size === "compact" ? "text-[14px]" : "text-[15px]"

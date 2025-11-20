@@ -73,7 +73,7 @@ const CarouselRow = ({ title, items }) => {
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
     }, []);
-    const itemW = `calc((100% - ${PAD_PX * 2}px - ${GAP_PX} * (${Math.ceil(visible)} - 1)) / ${visible})`;
+    const itemW = `calc((100% - ${PAD_PX * 2}px - ${GAP_PX}px * (${Math.ceil(visible)} - 1)) / ${visible})`;
     const page = (dir) => {
         const el = scrollerRef.current;
         if (!el)
@@ -91,10 +91,11 @@ const CarouselRow = ({ title, items }) => {
         if (e.key === "ArrowRight")
             page(1);
     };
+
     if (!items.length)
         return null;
     const showArrows = items.length > visible;
-    return (_jsxs("section", { className: "relative w-full max-w-7xl mx-auto py-7", children: [_jsx("h2", { className: "text-xl md:text-2xl font-semibold text-white mb-3 px-3", children: title }), _jsx("button", { onClick: () => page(-1), className: `${showArrows ? "hidden md:flex" : "hidden"} absolute left-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 items-center justify-center bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors`, "aria-label": "Anterior", children: "\u2039" }), _jsx("button", { onClick: () => page(1), className: `${showArrows ? "hidden md:flex" : "hidden"} absolute right-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 items-center justify-center bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors`, "aria-label": "Siguiente", children: "\u203A" }), _jsxs("div", { ref: scrollerRef, role: "region", "aria-label": `Carrusel de ${title}`, tabIndex: 0, onKeyDown: handleKeyDown, className: "flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth scrollbar-hide min-w-0 focus:outline-none focus:ring-2 focus:ring-blue-500/50 rounded", style: { gap: `${GAP_PX}px`, paddingInline: `${PAD_PX}px` }, children: [items.map((p) => {
+    return (_jsxs("section", { className: "relative w-full max-w-7xl mx-auto py-7", children: [_jsx("h2", { className: "text-xl md:text-2xl font-semibold text-white mb-3 px-3", children: title }), _jsx("button", { onClick: () => page(-1), className: `${showArrows ? "hidden md:flex" : "hidden"} absolute left-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 items-center justify-center bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors`, "aria-label": "Anterior", children: "‹" }), _jsx("button", { onClick: () => page(1), className: `${showArrows ? "hidden md:flex" : "hidden"} absolute right-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 items-center justify-center bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors`, "aria-label": "Siguiente", children: "›" }),             _jsxs("div", { ref: scrollerRef, role: "region", "aria-label": `Carrusel de ${title}`, tabIndex: 0, onKeyDown: handleKeyDown, className: "flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth scrollbar-hide min-w-0 focus:outline-none focus:ring-2 focus:ring-blue-500/50 rounded", style: { gap: `${GAP_PX}px`, paddingInline: `${PAD_PX}px` }, children: [items.map((p) => {
                         const cover = pickCover(p.images);
                         return (_jsx(Link, { to: `/product/${p.id}`, "data-card": true, className: "snap-start shrink-0 min-w-0 block", "aria-label": p.description, style: { width: itemW, flex: `0 0 ${itemW}`, maxWidth: itemW }, children: _jsx(Card, { image: cover, description: p.description, size: "compact" }) }, p.id));
                     }), _jsx("div", { className: "shrink-0", style: { width: `${PAD_PX}px` } })] })] }));
@@ -106,7 +107,7 @@ const LoadingSkeleton = () => (_jsxs("div", { className: "min-h-screen bg-gradie
 /* ================================
    Error State
 ================================== */
-const ErrorState = ({ error }) => (_jsx("div", { className: "min-h-screen bg-gradient-to-b from-[#031a1a] to-black flex items-center justify-center p-4", children: _jsxs("div", { className: "text-center max-w-md", children: [_jsx("div", { className: "text-6xl mb-4", children: "\uD83D\uDE15" }), _jsx("h2", { className: "text-2xl text-red-300 mb-4 font-semibold", children: "Oops, algo sali\u00F3 mal" }), _jsx("p", { className: "text-gray-400 mb-6 text-sm", children: error instanceof Error ? error.message : String(error) }), _jsx("button", { onClick: () => window.location.reload(), className: "px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium", children: "Reintentar" })] }) }));
+const ErrorState = ({ error }) => (_jsx("div", { className: "min-h-screen bg-gradient-to-b from-[#031a1a] to-black flex items-center justify-center p-4", children: _jsxs("div", { className: "text-center max-w-md", children: [_jsx("div", { className: "text-6xl mb-4", children: "😕" }), _jsx("h2", { className: "text-2xl text-red-300 mb-4 font-semibold", children: "Oops, algo salió mal" }), _jsx("p", { className: "text-gray-400 mb-6 text-sm", children: error instanceof Error ? error.message : String(error) }), _jsx("button", { onClick: () => window.location.reload(), className: "px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium", children: "Reintentar" })] }) }));
 /* ================================
    Home
 ================================== */

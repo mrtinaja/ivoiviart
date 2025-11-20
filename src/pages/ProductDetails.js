@@ -174,12 +174,7 @@ const ProductDetails = () => {
         run();
         return () => { cancelled = true; };
     }, [groups, activeLabel]);
-    // Si no quedó ninguna imagen válida, volvemos a la galería
-    useEffect(() => {
-        if (resolvedSrcs && resolvedSrcs.length === 0) {
-            navigate("/", { replace: true });
-        }
-    }, [resolvedSrcs, navigate]);
+   
     // Precio
     const priceNum = product?.price ?? null;
     const hasPrice = priceNum !== null && Number.isFinite(priceNum);
