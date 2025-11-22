@@ -11,8 +11,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
 
-
-
 /** WhatsApp */
 const WHATSAPP = "+5491166742221";
 const openWhatsapp = () => {
@@ -20,17 +18,21 @@ const openWhatsapp = () => {
   window.open(url, "_blank");
 };
 
-/** Botón hamburguesa animado (bars -> X) */
-const Burger: React.FC<{ open: boolean; onClick: () => void }> = ({
-  open,
-  onClick,
-}) => {
+/** Botón hamburguesa animado con contador */
+const Burger: React.FC<{
+  open: boolean;
+  onClick: () => void;
+  count?: number;
+}> = ({ open, onClick, count }) => {
+  const showBadge = typeof count === "number" && count > 0;
+
   return (
     <button
       onClick={onClick}
       aria-label={open ? "Cerrar menú" : "Abrir menú"}
-      className="md:hidden relative w-11 h-11 grid place-items-center rounded-full bg-black/30 hover:bg-black/40 transition-colors"
+      className="md:hidden relative w-11 h-11 grid place-items-center rounded-full bg-black/35 hover:bg-black/50 transition-colors shadow-lg"
     >
+      {/* barras */}
       <span
         className={`absolute block h-[2px] w-6 bg-white transition-all duration-300 ${
           open ? "rotate-45 translate-y-0" : "-translate-y-[6px]"
@@ -46,6 +48,13 @@ const Burger: React.FC<{ open: boolean; onClick: () => void }> = ({
           open ? "-rotate-45 translate-y-0" : "translate-y-[6px]"
         }`}
       />
+
+      {/* badge del carrito, SIEMPRE sobre el botón */}
+      {showBadge && (
+        <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 grid place-items-center leading-none">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
     </button>
   );
 };
@@ -66,26 +75,22 @@ const Header: React.FC = () => {
   const { cart } = useCart();
   const { pathname } = useLocation();
   const [open, setOpen] = React.useState(false);
-  const anchorRef = React.useRef<HTMLDivElement | null>(null);
 
-  // Cerrar al navegar, escape o click fuera
-  React.useEffect(() => setOpen(false), [pathname]);
+  // Cerrar al navegar
   React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    setOpen(false);
+  }, [pathname]);
+
+  // Escape cierra menú
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-  React.useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (!anchorRef.current) return;
-      if (!anchorRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
 
-  // Evitar scroll de fondo cuando el abanico está abierto
+  // Evitar scroll de fondo cuando el menú está abierto
   React.useEffect(() => {
     document.documentElement.style.overflow = open ? "hidden" : "";
     return () => {
@@ -95,7 +100,7 @@ const Header: React.FC = () => {
 
   // Geometría del abanico (abre hacia abajo/izquierda)
   const R = 120;
-  const angleStart = (110 * Math.PI) / 180; // 110°–170° → cos<0 (izq), sin>0 (abajo)
+  const angleStart = (110 * Math.PI) / 180;
   const angleEnd = (170 * Math.PI) / 180;
 
   const angles: number[] =
@@ -108,6 +113,7 @@ const Header: React.FC = () => {
 
   return (
     <>
+      {/* HEADER */}
       <nav
         className="
           fixed top-0 w-full z-50 text-white shadow-lg
@@ -119,7 +125,7 @@ const Header: React.FC = () => {
           {/* Logo + Marca */}
           <div className="flex items-center">
             <Link to="/" className="hover:opacity-90 transition-opacity">
-             <img
+              <img
                 src="/logo.jpg"
                 alt="logo"
                 className="h-14 w-14 sm:h-16 sm:w-16 rounded-full ring-2 ring-white/20"
@@ -166,105 +172,111 @@ const Header: React.FC = () => {
             </Link>
           </div>
 
-          {/* Mobile: hamburguesa + speed-dial */}
-          <div className="md:hidden relative" ref={anchorRef}>
-            <Burger open={open} onClick={() => setOpen((v) => !v)} />
-
-            {/* Overlay */}
-            <AnimatePresence>
-              {open && (
-                <motion.div
-                  key="overlay"
-                  className="fixed inset-0 z-40 bg-black/40"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                />
-              )}
-            </AnimatePresence>
-
-            {/* Abanico */}
-            <AnimatePresence>
-              {open && (
-                <motion.div
-                  key="fan"
-                  className="absolute z-50"
-                  style={{ right: 0, top: 0 }} // ancla arriba/derecha del botón
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.12 }}
-                >
-                  {/* FAB carrito */}
-                  <div className="absolute right-0 top-0 translate-x-[6px] -translate-y-[6px]">
-                    <Link
-                      to="/carrito"
-                      onClick={() => setOpen(false)}
-                      className="relative grid place-items-center w-12 h-12 rounded-full bg-black/70 text-white shadow-lg"
-                      aria-label="Carrito"
-                      title="Carrito"
-                    >
-                      <FaShoppingCart />
-                      {cart.length > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold rounded-full w-4 h-4 grid place-items-center">
-                          {cart.length}
-                        </span>
-                      )}
-                    </Link>
-                  </div>
-
-                  {/* Items del abanico */}
-                  {fanItems.map((item, i) => {
-                    const x = Math.cos(angles[i]) * R; // cos<0 → izquierda
-                    const y = Math.sin(angles[i]) * R; // sin>0 → abajo
-                    return (
-                      <motion.div
-                        key={i}
-                        className="absolute right-0 top-0"
-                        initial={{ x: 0, y: 0, scale: 0.5, opacity: 0 }}
-                        animate={{ x, y, scale: 1, opacity: 1 }}
-                        exit={{ x: 0, y: 0, scale: 0.5, opacity: 0 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 320,
-                          damping: 22,
-                          delay: 0.02 * i,
-                        }}
-                      >
-                        {item.type === "link" ? (
-                          <Link
-                            to={item.to}
-                            onClick={() => setOpen(false)}
-                            className="flex items-center gap-2 pl-3 pr-3 py-2 rounded-full bg-[#0b2e30] text-white shadow-md border border-white/10"
-                          >
-                            <span className="text-lg">{item.icon}</span>
-                            <span className="text-sm font-medium">
-                              {item.label}
-                            </span>
-                          </Link>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              item.onClick();
-                              setOpen(false);
-                            }}
-                            className="flex items-center gap-2 pl-3 pr-3 py-2 rounded-full bg-[#0b2e30] text-white shadow-md border border-white/10"
-                          >
-                            <span className="text-lg">{item.icon}</span>
-                            <span className="text-sm font-medium">
-                              {item.label}
-                            </span>
-                          </button>
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {/* Mobile: solo el botón hamburguesa */}
+          <div className="md:hidden">
+            <Burger
+              open={open}
+              onClick={() => setOpen((v) => !v)}
+              count={cart.length}
+            />
           </div>
         </div>
       </nav>
+
+      {/* Overlay (click para cerrar) */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="overlay"
+            className="fixed inset-0 z-40 bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Abanico flotante anclado cerca del botón */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="fan"
+            className="fixed top-[70px] right-4 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+          >
+            <div className="relative">
+              {/* FAB carrito */}
+              <div className="absolute right-0 top-0 translate-x-[6px] -translate-y-[6px]">
+                <Link
+                  to="/carrito"
+                  onClick={() => setOpen(false)}
+                  className="relative grid place-items-center w-12 h-12 rounded-full bg-black/70 text-white shadow-lg"
+                  aria-label="Carrito"
+                  title="Carrito"
+                >
+                  <FaShoppingCart />
+                  {cart.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold rounded-full w-4 h-4 grid place-items-center">
+                      {cart.length}
+                    </span>
+                  )}
+                </Link>
+              </div>
+
+              {/* Items del abanico */}
+              {fanItems.map((item, i) => {
+                const x = Math.cos(angles[i]) * R;
+                const y = Math.sin(angles[i]) * R;
+                return (
+                  <motion.div
+                    key={i}
+                    className="absolute right-0 top-0"
+                    initial={{ x: 0, y: 0, scale: 0.5, opacity: 0 }}
+                    animate={{ x, y, scale: 1, opacity: 1 }}
+                    exit={{ x: 0, y: 0, scale: 0.5, opacity: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 320,
+                      damping: 22,
+                      delay: 0.02 * i,
+                    }}
+                  >
+                    {item.type === "link" ? (
+                      <Link
+                        to={item.to}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-2 pl-3 pr-3 py-2 rounded-full bg-[#0b2e30] text-white shadow-md border border-white/10"
+                      >
+                        <span className="text-lg">{item.icon}</span>
+                        <span className="text-sm font-medium">
+                          {item.label}
+                        </span>
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          item.onClick();
+                          setOpen(false);
+                        }}
+                        className="flex items-center gap-2 pl-3 pr-3 py-2 rounded-full bg-[#0b2e30] text-white shadow-md border border-white/10"
+                      >
+                        <span className="text-lg">{item.icon}</span>
+                        <span className="text-sm font-medium">
+                          {item.label}
+                        </span>
+                      </button>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Línea viva bajo el header */}
       <div
